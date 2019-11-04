@@ -26,7 +26,7 @@ namespace GeekBurger.LabelLoader.Services
             ComputerVisionClient client = Authenticate(_Configuration.GetSection("Vision").GetValue<string>("endpoint"), 
                 _Configuration.GetSection("Vision").GetValue<string>("subscriptionKey"));
 
-            AnalyzeImageUrl(client, Path.GetFullPath(@"c:\temp\rotulo2.jpg")).Wait();
+            AnalyzeImageUrl(client, Path.Combine(Environment.CurrentDirectory,"images", Path.GetFileName("rotulo.jpg"))).Wait();
             return null;
         }
 

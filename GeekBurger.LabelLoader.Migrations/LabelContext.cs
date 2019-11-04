@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using GeekBurger.LabelLoader.Models;
+using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -8,6 +9,8 @@ namespace GeekBurger.LabelLoader.Migrations
 {
     public class LabelContext : DbContext
     {
+        
+
         public LabelContext(DbContextOptions options) : base(options)
         {
         }
@@ -15,5 +18,11 @@ namespace GeekBurger.LabelLoader.Migrations
         protected LabelContext()
         {
         }
+
+
+
+        public DbSet<TabelaNutrientes> TabelaNutrientes { get; set; }
+
+
     }
 }

@@ -8,4 +8,8 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="2.1.11" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\GeekBurger.LabelLoader.Models\GeekBurger.LabelLoader.Models.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -8,5 +8,6 @@ namespace GeekBurger.LabelLoader.Contract
     {
         public string ItemName { get; set; }
         public string[] Ingredients { get; set; }
+        
     }
 }

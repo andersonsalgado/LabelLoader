@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using GeekBurger.LabelLoader.Migrations;
 using GeekBurger.LabelLoader.Services;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using System;
+using System.IO;
 
 namespace GeekBurger.LabelLoader.Controllers
 {
@@ -16,15 +14,15 @@ namespace GeekBurger.LabelLoader.Controllers
         private readonly IConfiguration _Configuration;
         private readonly VisionServices _visionServices;
 
-        public TesteController(IConfiguration configuration)
+        public TesteController(IConfiguration configuration, LabelContext labelContext)
         {
             _Configuration = configuration;
-            _visionServices = new VisionServices(configuration);
+            _visionServices = new VisionServices(configuration,labelContext);
             
         }
         public IActionResult Get() {
-            _visionServices.ObterIngredientes();
-            return Ok();
+            var retorno = _visionServices.ObterIngredientes(Path.Combine(Environment.CurrentDirectory, "images", Path.GetFileName("rotulo.png")));
+            return new ObjectResult(retorno);
         }
     }
 }

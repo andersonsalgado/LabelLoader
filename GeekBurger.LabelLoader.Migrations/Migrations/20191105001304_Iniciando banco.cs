@@ -1,9 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace GeekBurger.LabelLoader.Migrations.Migrations
 {
-    public partial class Criandotabeladenutrientes : Migration
+    public partial class Iniciandobanco : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -11,8 +10,7 @@ namespace GeekBurger.LabelLoader.Migrations.Migrations
                 name: "Cad_Ingredientes",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+                    Id = table.Column<long>(type: "bigint", nullable: false),
                     Descricao = table.Column<string>(type: "varchar(60)", nullable: true)
                 },
                 constraints: table =>

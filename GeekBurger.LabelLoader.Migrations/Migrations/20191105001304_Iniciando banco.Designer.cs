@@ -3,14 +3,16 @@ using GeekBurger.LabelLoader.Migrations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace GeekBurger.LabelLoader.Migrations.Migrations
 {
     [DbContext(typeof(LabelContext))]
-    partial class LabelContextModelSnapshot : ModelSnapshot
+    [Migration("20191105001304_Iniciando banco")]
+    partial class Iniciandobanco
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

@@ -10,16 +10,17 @@ namespace GeekBurger.LabelLoader.Models
     public class TabelaNutrientes
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.None)]
         [Column("Id",TypeName = "bigint")]
         public long Id { get; set; }
 
         [Column("Descricao", TypeName = "varchar(60)")]
         public string Descricao { get; set; }
 
-        public TabelaNutrientes(long _Id, string _Descricao)
+        public TabelaNutrientes(long Id, string Descricao)
         {
-            Id = _Id;
-            Descricao = _Descricao;
+            this.Id = Id;
+            this.Descricao = Descricao;
         }
     }
 }

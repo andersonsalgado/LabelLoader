@@ -1,4 +1,5 @@
 ﻿using GeekBurger.LabelLoader.Contract;
+using GeekBurger.LabelLoader.Migrations;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using Microsoft.Extensions.Configuration;
@@ -7,6 +8,8 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace GeekBurger.LabelLoader.Services
@@ -14,69 +17,38 @@ namespace GeekBurger.LabelLoader.Services
     public class VisionServices
     {
         private readonly IConfiguration _Configuration;
+        private readonly LabelContext _labelContext;
+        private readonly ComputerVisionClient _client;
 
-        public VisionServices(IConfiguration configuration)
+        public VisionServices(IConfiguration configuration, LabelContext labelContext)
         {
             _Configuration = configuration;
-        }
+            _labelContext = labelContext;
 
-        public LabelImageAdded ObterIngredientes()
-        {
             // Create a client
-            ComputerVisionClient client = Authenticate(_Configuration.GetSection("Vision").GetValue<string>("endpoint"), 
+            _client = Authenticate(
+                                    _Configuration.GetSection("Vision").GetValue<string>("endpoint"),
                 _Configuration.GetSection("Vision").GetValue<string>("subscriptionKey"));
 
-            AnalyzeImageUrl(client, Path.Combine(Environment.CurrentDirectory,"images", Path.GetFileName("rotulo.jpg"))).Wait();
-            return null;
+
+
         }
 
-        /*
-        * AUTHENTICATE
-        * Creates a Computer Vision client used by each example.
-        */
-        public static ComputerVisionClient Authenticate(string endpoint, string key)
+        public async Task<LabelImageAdded> ObterIngredientes(string pathFile)
         {
-            ComputerVisionClient client =
-                new ComputerVisionClient(new ApiKeyServiceClientCredentials(key))
-                { Endpoint = endpoint };
-            return client;
-        }
 
-
-        /* 
-* ANALYZE IMAGE - URL IMAGE
-* Analyze URL image. Extracts captions, categories, tags, objects, faces, racy/adult content,
-* brands, celebrities, landmarks, color scheme, and image types.
-*/
-        public static async Task AnalyzeImageUrl(ComputerVisionClient client, string imageUrl)
-        {
-            Console.WriteLine("----------------------------------------------------------");
-            Console.WriteLine("ANALYZE IMAGE - URL");
-            Console.WriteLine();
-
-            // Creating a list that defines the features to be extracted from the image. 
-            List<VisualFeatureTypes> features = new List<VisualFeatureTypes>()
+            List<string> ingredientes = new List<string>();
+            StringBuilder concat = new StringBuilder();
+            bool entrar = false;
+            using (var imgStream = new FileStream(pathFile, FileMode.Open))
             {
-                VisualFeatureTypes.Categories, VisualFeatureTypes.Description,
-                VisualFeatureTypes.Faces, VisualFeatureTypes.ImageType,
-                VisualFeatureTypes.Tags, VisualFeatureTypes.Adult,
-                VisualFeatureTypes.Color, VisualFeatureTypes.Brands,
-                VisualFeatureTypes.Objects
-            };
 
 
-            Console.WriteLine($"Analyzing the image {Path.GetFileName(imageUrl)}...");
-            Console.WriteLine();
-            // Analyze the URL image 
-            //ImageAnalysis results = await client.AnalyzeImageAsync(imageUrl, features);
-
-            using (var imgStream = new FileStream(imageUrl, FileMode.Open))
-            {
-                RecognizeTextInStreamHeaders results = await client.RecognizeTextInStreamAsync(imgStream, TextRecognitionMode.Printed);
+                RecognizeTextInStreamHeaders results = await _client.RecognizeTextInStreamAsync(imgStream, TextRecognitionMode.Printed);
 
                 string idImagem = results.OperationLocation.Split('/').Last();
 
-                var resultText = await client.GetTextOperationResultAsync(idImagem);
+                var resultText = await _client.GetTextOperationResultAsync(idImagem);
 
                 Console.WriteLine("Teste");
 
@@ -90,16 +62,43 @@ namespace GeekBurger.LabelLoader.Services
                 {
                     foreach (Line line in lines)
                     {
-                        texto += line.Text + "\n";
+                        if (line.Text.IndexOf("INGREDIENTE")>= 0 || entrar)
+                        {
+                            entrar = true;
+                            concat.Append(line.Text);
                     }
+                        //texto += line.Text + "\n";
                 }
 
+                    var resultado = Regex.Replace(concat.ToString(), "[^A-Za-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ, -]", "");
+
+                    LabelImageAdded labelImageAdded = new LabelImageAdded();
+                    labelImageAdded.ItemName = pathFile;
+                    labelImageAdded.Ingredients = resultado.Split(',');
+
+                    return labelImageAdded;
             } 
 
+            }
             
-            //results.
-
+            //AnalyzeImageUrl(_client, Path.Combine(Environment.CurrentDirectory,"images", Path.GetFileName("rotulo.jpg"))).Wait();
+            return null;
         }
+
+        /*
+        * AUTHENTICATE
+        * Creates a Computer Vision client used by each example.
+        */
+        public static ComputerVisionClient Authenticate(string endpoint, string key)
+        {
+            ComputerVisionClient client = 
+                new ComputerVisionClient(new ApiKeyServiceClientCredentials(key))
+                { Endpoint = endpoint };
+            return client;
+        }
+
+
+       
     }
 
 }

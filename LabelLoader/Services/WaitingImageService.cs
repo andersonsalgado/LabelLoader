@@ -1,4 +1,5 @@
-﻿using GeekBurger.LabelLoader.Migrations;
+﻿using GeekBurger.LabelLoader.Contract;
+using GeekBurger.LabelLoader.Migrations;
 using Microsoft.Azure.ServiceBus;
 using Microsoft.Azure.ServiceBus.Management;
 using Microsoft.EntityFrameworkCore;
@@ -7,6 +8,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,7 +26,6 @@ namespace GeekBurger.LabelLoader.Services
         private Timer _timer;
         private ITopicClient topicClient;
         private ManagementClient managementClient;
-
         public WaitingImageService(
                 ILogger<WaitingImageService> logger, 
                 IConfiguration configuration)
@@ -45,7 +46,7 @@ namespace GeekBurger.LabelLoader.Services
             return Task.CompletedTask;
         }
 
-        private void DoWork(object state)
+        private async void DoWork(object state)
         {
             DirectoryInfo _dirNotRead = new DirectoryInfo($"{Environment.CurrentDirectory}{Configuration.GetSection("Files")["NotRead"]}");
             FileInfo[] _filesNotRead = _dirNotRead.GetFiles();
@@ -55,12 +56,12 @@ namespace GeekBurger.LabelLoader.Services
                 VisionServices _vision = new VisionServices(Configuration, _labelContext);
                 foreach (var file in _filesNotRead)
                 {
-                    _vision.ObterIngredientes(file.FullName);
-                    //MainAsync().GetAwaiter().GetResult();  MANDA A MENSAGEM
+                    var imagemString = await _vision.ObterIngredientes(file.FullName);
+                    MainAsync(imagemString).GetAwaiter().GetResult();
+                    _logger.LogInformation("LabelImage: {imagemString}", imagemString);
                 }
             }
             
-            _logger.LogInformation("Count: {Count}", executionCount++);
         }
 
         public Task StopAsync(CancellationToken stoppingToken)
@@ -72,9 +73,8 @@ namespace GeekBurger.LabelLoader.Services
             return Task.CompletedTask;
         }
 
-        private async Task MainAsync()
+        private async Task MainAsync(LabelImageAdded imagemString)
         {
-            const int numberOfMessages = 10;
             try
             {
                 await managementClient.GetTopicAsync(TopicName);
@@ -89,28 +89,25 @@ namespace GeekBurger.LabelLoader.Services
             Console.WriteLine("Press ENTER key to exit after sending all the messages.");
             Console.WriteLine("=======================================================");
 
-            // Send messages.
-            await SendMessagesAsync(numberOfMessages);
+            await SendMessagesAsync(imagemString);
 
             Console.ReadKey();
 
             await topicClient.CloseAsync();
         }
-        private async Task SendMessagesAsync(int numberOfMessagesToSend)
+        private async Task SendMessagesAsync(LabelImageAdded imagemString)
         {
             try
             {
-                for (var i = 0; i < numberOfMessagesToSend; i++)
                 {
-                    // Create a new message to send to the topic.
-                    string messageBody = $"Message {i}";
-                    var message = new Message(Encoding.UTF8.GetBytes(messageBody));
+                    BinaryFormatter bf = new BinaryFormatter();
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                        bf.Serialize(ms, imagemString);
+                        var message = new Message(ms.ToArray());
 
-                    // Write the body of the message to the console.
-                    Console.WriteLine($"Sending message: {messageBody}");
-
-                    // Send the message to the topic.
-                    await topicClient.SendAsync(message);
+                        await topicClient.SendAsync(message);
+                    }
                 }
             }
             catch (Exception exception)

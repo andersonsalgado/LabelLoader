@@ -1,12 +1,12 @@
-﻿using Microsoft.Azure.ServiceBus;
+﻿using GeekBurger.LabelLoader.Migrations;
+using Microsoft.Azure.ServiceBus;
 using Microsoft.Azure.ServiceBus.Management;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,6 +16,8 @@ namespace GeekBurger.LabelLoader.Services
     public class WaitingImageService : IHostedService, IDisposable
     {
         public IConfiguration Configuration { get; }
+
+        private readonly LabelContext _labelContext;
         const string TopicName = "labelloader";
         private int executionCount = 0;
         private readonly ILogger<WaitingImageService> _logger;
@@ -23,10 +25,13 @@ namespace GeekBurger.LabelLoader.Services
         private ITopicClient topicClient;
         private ManagementClient managementClient;
 
-        public WaitingImageService(ILogger<WaitingImageService> logger, IConfiguration configuration)
+        public WaitingImageService(
+                ILogger<WaitingImageService> logger, 
+                IConfiguration configuration)
         {
             _logger = logger;
             Configuration = configuration;
+            _labelContext = new LabelContext(configuration);
         }
 
 
@@ -35,19 +40,19 @@ namespace GeekBurger.LabelLoader.Services
             _logger.LogInformation("Serviço Iniciado.");
 
             _timer = new Timer(DoWork, null, TimeSpan.Zero,
-                TimeSpan.FromSeconds(60));
+                TimeSpan.FromSeconds(10000));
 
             return Task.CompletedTask;
         }
 
         private void DoWork(object state)
         {
-            DirectoryInfo _dirNotRead = new DirectoryInfo(Configuration.GetSection("Files")["NotRead"]);
+            DirectoryInfo _dirNotRead = new DirectoryInfo($"{Environment.CurrentDirectory}{Configuration.GetSection("Files")["NotRead"]}");
             FileInfo[] _filesNotRead = _dirNotRead.GetFiles();
 
             if (_filesNotRead.Length != 0)
             {
-                VisionServices _vision = new VisionServices(Configuration);
+                VisionServices _vision = new VisionServices(Configuration, _labelContext);
                 foreach (var file in _filesNotRead)
                 {
                     _vision.ObterIngredientes(file.FullName);

@@ -28,7 +28,7 @@ namespace GeekBurger.LabelLoader.Services
             // Create a client
             _client = Authenticate(
                                     _Configuration.GetSection("Vision").GetValue<string>("endpoint"),
-                _Configuration.GetSection("Vision").GetValue<string>("subscriptionKey"));
+                                    _Configuration.GetSection("Vision").GetValue<string>("subscriptionKey"));
 
 
 
@@ -42,7 +42,7 @@ namespace GeekBurger.LabelLoader.Services
             bool entrar = false;
             using (var imgStream = new FileStream(pathFile, FileMode.Open))
             {
-
+                
 
                 RecognizeTextInStreamHeaders results = await _client.RecognizeTextInStreamAsync(imgStream, TextRecognitionMode.Printed);
 
@@ -66,9 +66,9 @@ namespace GeekBurger.LabelLoader.Services
                         {
                             entrar = true;
                             concat.Append(line.Text);
-                    }
+                        }
                         //texto += line.Text + "\n";
-                }
+                    }
 
                     var resultado = Regex.Replace(concat.ToString(), "[^A-Za-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ, -]", "");
 
@@ -77,10 +77,10 @@ namespace GeekBurger.LabelLoader.Services
                     labelImageAdded.Ingredients = resultado.Split(',');
 
                     return labelImageAdded;
-            } 
+                }
 
             }
-            
+
             //AnalyzeImageUrl(_client, Path.Combine(Environment.CurrentDirectory,"images", Path.GetFileName("rotulo.jpg"))).Wait();
             return null;
         }

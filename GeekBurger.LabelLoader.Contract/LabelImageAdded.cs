@@ -4,6 +4,7 @@ using System.Text;
 
 namespace GeekBurger.LabelLoader.Contract
 {
+    [Serializable]
     public class LabelImageAdded
     {
         public string ItemName { get; set; }

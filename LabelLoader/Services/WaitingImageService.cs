@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -88,20 +89,17 @@ namespace GeekBurger.LabelLoader.Services
 
             await SendMessagesAsync(imagemString);
             await topicClient.CloseAsync();
+
+            Directory.Move($"{Environment.CurrentDirectory}{Configuration.GetSection("Files")["NotRead"]}", $"{Environment.CurrentDirectory}{Configuration.GetSection("Files")["Read"]}");
         }
         private async Task SendMessagesAsync(LabelImageAdded imagemString)
         {
             try
             {
                 {
-                    BinaryFormatter bf = new BinaryFormatter();
-                    using (MemoryStream ms = new MemoryStream())
-                    {
-                        bf.Serialize(ms, imagemString);
-                        var message = new Message(ms.ToArray());
+                        var message = new Message(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(imagemString)));
 
                         await topicClient.SendAsync(message);
-                    }
                 }
             }
             catch (Exception exception)

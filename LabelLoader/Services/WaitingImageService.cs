@@ -1,7 +1,6 @@
 ﻿using GeekBurger.LabelLoader.Migrations;
 using Microsoft.Azure.ServiceBus;
 using Microsoft.Azure.ServiceBus.Management;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -18,6 +17,7 @@ namespace GeekBurger.LabelLoader.Services
         public IConfiguration Configuration { get; }
 
         private readonly LabelContext _labelContext;
+        private readonly ILoggerFactory _loggerFactory;
         const string TopicName = "labelloader";
         private int executionCount = 0;
         private readonly ILogger<WaitingImageService> _logger;
@@ -27,11 +27,13 @@ namespace GeekBurger.LabelLoader.Services
 
         public WaitingImageService(
                 ILogger<WaitingImageService> logger, 
-                IConfiguration configuration)
+                IConfiguration configuration,
+                ILoggerFactory loggerFactory)
         {
             _logger = logger;
             Configuration = configuration;
             _labelContext = new LabelContext(configuration);
+            _loggerFactory = loggerFactory;
         }
 
 
@@ -52,7 +54,7 @@ namespace GeekBurger.LabelLoader.Services
 
             if (_filesNotRead.Length != 0)
             {
-                VisionServices _vision = new VisionServices(Configuration, _labelContext);
+                VisionServices _vision = new VisionServices(Configuration, _loggerFactory.CreateLogger<VisionServices>(), _labelContext);
                 foreach (var file in _filesNotRead)
                 {
                     _vision.ObterIngredientes(file.FullName);

@@ -16,8 +16,8 @@ namespace GeekBurger.LabelLoader.Controllers
 
         public TesteController(IConfiguration configuration, LabelContext labelContext)
         {
-            _Configuration = configuration;
-            _visionServices = new VisionServices(configuration,labelContext);
+            //_Configuration = configuration;
+            //_visionServices = new VisionServices(configuration,labelContext);
             
         }
         public IActionResult Get() {

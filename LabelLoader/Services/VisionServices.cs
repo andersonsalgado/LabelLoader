@@ -3,6 +3,8 @@ using GeekBurger.LabelLoader.Migrations;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -18,70 +20,98 @@ namespace GeekBurger.LabelLoader.Services
     {
         private readonly IConfiguration _Configuration;
         private readonly LabelContext _labelContext;
+        private readonly ILogger<VisionServices> _logger;
+        private readonly ILoggerFactory _loggerFactory;
         private readonly ComputerVisionClient _client;
+        private readonly StringBuilder _logs;
 
-        public VisionServices(IConfiguration configuration, LabelContext labelContext)
+        public VisionServices(
+                                IConfiguration configuration, 
+                                ILogger<VisionServices> logger, 
+                                LabelContext labelContext)
         {
+            _logs = new StringBuilder();
+
             _Configuration = configuration;
             _labelContext = labelContext;
+            _logger = logger;
 
-            // Create a client
+            _logs.AppendLine("Autenticando o serviço Vision no azure");
+
             _client = Authenticate(
                                     _Configuration.GetSection("Vision").GetValue<string>("endpoint"),
                                     _Configuration.GetSection("Vision").GetValue<string>("subscriptionKey"));
 
-
+            
 
         }
 
         public async Task<LabelImageAdded> ObterIngredientes(string pathFile)
         {
+            _logs.AppendLine("Iniciando método de ObterIngredientes");
 
-            List<string> ingredientes = new List<string>();
-            StringBuilder concat = new StringBuilder();
-            bool entrar = false;
-            using (var imgStream = new FileStream(pathFile, FileMode.Open))
+            try
             {
-                
+                List<string> ingredientes = new List<string>();
+                StringBuilder concat = new StringBuilder();
+                bool entrar = false;
 
-                RecognizeTextInStreamHeaders results = await _client.RecognizeTextInStreamAsync(imgStream, TextRecognitionMode.Printed);
-
-                string idImagem = results.OperationLocation.Split('/').Last();
-
-                var resultText = await _client.GetTextOperationResultAsync(idImagem);
-
-                Console.WriteLine("Teste");
-
-                var lines = resultText.RecognitionResult.Lines;
-                string texto = "";
-                if (lines.Count == 0)
+                _logs.AppendLine($"Lendo o arquivo: {pathFile} ");
+                using (var imgStream = new FileStream(pathFile, FileMode.Open))
                 {
-                    texto = "None";
-                }
-                else
-                {
-                    foreach (Line line in lines)
+                    RecognizeTextInStreamHeaders results = await _client.RecognizeTextInStreamAsync(imgStream, TextRecognitionMode.Printed);
+
+                    string idImagem = results.OperationLocation.Split('/').Last();
+
+                    var resultText = await _client.GetTextOperationResultAsync(idImagem);
+
+                    var lines = resultText.RecognitionResult.Lines;
+
+                    _logs.AppendLine($"Número de linhas encontradas: {lines.Count} ");
+
+                    if (lines.Count > 0)
                     {
-                        if (line.Text.IndexOf("INGREDIENTE")>= 0 || entrar)
+                        foreach (Line line in lines)
                         {
-                            entrar = true;
-                            concat.Append(line.Text);
+                            if (line.Text.IndexOf("INGREDIENTE") >= 0 || entrar)
+                            {
+                                entrar = true;
+                                concat.Append(line.Text);
+                            }
                         }
-                        //texto += line.Text + "\n";
+
+                        if (concat.ToString().Length > 0)
+                        {
+                            var resultado = Regex.Replace(concat.ToString(), "[^A-Za-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ, -]", "");
+                            resultado = resultado.Replace("INGREDIENTES", "");
+                            resultado = resultado.Replace("INGREDIENTE", "");
+
+                            _logs.AppendLine($"Retorno dos ingredientes: {resultado}");
+
+                            LabelImageAdded labelImageAdded = new LabelImageAdded();
+                            labelImageAdded.ItemName = pathFile;
+                            labelImageAdded.Ingredients = resultado.Split(',');
+
+                            _logs.AppendLine($"LabelImageAdded serializado: {JsonConvert.SerializeObject(labelImageAdded)}");
+                            _logger.LogInformation(_logs.ToString());
+                            return labelImageAdded;
+                        } else
+                        {
+                            _logs.AppendLine("Não foi encontrado ingredientes");
+                        }
+                    } else
+                    {
+                        _logs.AppendLine("Não foi encontrado ingredientes");
                     }
-
-                    var resultado = Regex.Replace(concat.ToString(), "[^A-Za-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ, -]", "");
-
-                    LabelImageAdded labelImageAdded = new LabelImageAdded();
-                    labelImageAdded.ItemName = pathFile;
-                    labelImageAdded.Ingredients = resultado.Split(',');
-
-                    return labelImageAdded;
                 }
-
+            }
+            catch (Exception ex)
+            {
+                _logs.AppendLine($"Ocorreu um erro: {ex.Message}");
+                _logger.LogError(ex,_logs.ToString());
             }
 
-            //AnalyzeImageUrl(_client, Path.Combine(Environment.CurrentDirectory,"images", Path.GetFileName("rotulo.jpg"))).Wait();
+            _logger.LogInformation(_logs.ToString());
             return null;
         }
 

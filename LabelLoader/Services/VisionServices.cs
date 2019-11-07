@@ -12,6 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace GeekBurger.LabelLoader.Services
@@ -60,7 +61,7 @@ namespace GeekBurger.LabelLoader.Services
                 using (var imgStream = new FileStream(pathFile, FileMode.Open))
                 {
                     RecognizeTextInStreamHeaders results = await _client.RecognizeTextInStreamAsync(imgStream, TextRecognitionMode.Printed);
-
+                    Thread.Sleep(2000);
                     string idImagem = results.OperationLocation.Split('/').Last();
 
                     var resultText = await _client.GetTextOperationResultAsync(idImagem);

@@ -45,8 +45,6 @@ namespace LabelLoader
                 c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "Label Loader", Version = "v1" });
             });
 
-            services.AddHostedService<WaitingImageService>();
-                     
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
 
@@ -54,10 +52,11 @@ namespace LabelLoader
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             app.UseSwagger();
+
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "Label Loader v1");
-                c.RoutePrefix = string.Empty;
+                c.RoutePrefix = string.Empty; 
             });
             if (env.IsDevelopment())
             {

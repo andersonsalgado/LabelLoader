@@ -11,8 +11,6 @@ namespace GeekBurger.LabelLoader.Controllers
     [ApiController]
     public class TesteController : ControllerBase
     {
-        private readonly IConfiguration _Configuration;
-        private readonly VisionServices _visionServices;
 
         public TesteController(IConfiguration configuration, LabelContext labelContext)
         {
@@ -21,8 +19,7 @@ namespace GeekBurger.LabelLoader.Controllers
             
         }
         public IActionResult Get() {
-            var retorno = _visionServices.ObterIngredientes(Path.Combine(Environment.CurrentDirectory, "images", Path.GetFileName("rotulo.png")));
-            return new ObjectResult(retorno);
+            return null;
         }
     }
 }

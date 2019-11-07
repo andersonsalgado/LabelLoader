@@ -8,7 +8,6 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -59,8 +58,8 @@ namespace GeekBurger.LabelLoader.Services
                 foreach (var file in _filesNotRead)
                 {
                     var imagemString = await _vision.ObterIngredientes(file.FullName);
-                    MainAsync(imagemString).GetAwaiter().GetResult();
-                    _logger.LogInformation("LabelImage: {imagemString}", imagemString);
+                    //MainAsync(imagemString).GetAwaiter().GetResult();
+                    //_logger.LogInformation("LabelImage: {imagemString}", imagemString);
                 }
             }
             

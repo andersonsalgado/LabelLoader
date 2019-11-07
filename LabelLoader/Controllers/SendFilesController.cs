@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -19,7 +20,7 @@ namespace GeekBurger.LabelLoader.Controllers
         // POST api/<controller>
         [HttpPost]
         [Route("enviar")]
-        public IActionResult Post([FromForm] byte[] arquivos)
+        public IActionResult Post([FromForm] List<IFormFile> arquivos)
         {
             try
             {

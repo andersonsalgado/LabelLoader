@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -61,8 +62,6 @@ namespace GeekBurger.LabelLoader.Services
                     var imagemString = _vision.ObterIngredientes(file.FullName).Result;
                     MainAsync(imagemString).GetAwaiter().GetResult();
                     _logger.LogInformation("LabelImage: {imagemString}", imagemString);
-                    //MainAsync(imagemString).GetAwaiter().GetResult();
-                    //_logger.LogInformation("LabelImage: {imagemString}", imagemString);
                 }
             }
             
@@ -93,7 +92,7 @@ namespace GeekBurger.LabelLoader.Services
             await SendMessagesAsync(imagemString);
             await topicClient.CloseAsync();
 
-            Directory.Move($"{Environment.CurrentDirectory}{Configuration.GetSection("Files")["NotRead"]}", $"{Environment.CurrentDirectory}{Configuration.GetSection("Files")["Read"]}");
+            //Directory.Move($"{Environment.CurrentDirectory}{Configuration.GetSection("Files")["NotRead"]}", $"{Environment.CurrentDirectory}{Configuration.GetSection("Files")["Read"]}");
         }
         private async Task SendMessagesAsync(LabelImageAdded imagemString)
         {

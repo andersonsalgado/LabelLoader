@@ -31,7 +31,6 @@ namespace LabelLoader
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-
             services.AddDbContext<LabelContext> (option =>
             {
                 option.UseSqlServer(Configuration.GetConnectionString("LabelContextConnectionString"));
@@ -40,22 +39,20 @@ namespace LabelLoader
             Log.Logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(Configuration)
                 .CreateLogger();
-
             services.AddHostedService<WaitingImageService>();
-
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "Label Loader", Version = "v1" });
             });
 
+            services.AddHostedService<WaitingImageService>();
+                     
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
-
-            
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {

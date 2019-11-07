@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -22,7 +23,6 @@ namespace GeekBurger.LabelLoader.Services
         private readonly IConfiguration _Configuration;
         private readonly LabelContext _labelContext;
         private readonly ILogger<VisionServices> _logger;
-        private readonly ILoggerFactory _loggerFactory;
         private readonly ComputerVisionClient _client;
         private readonly StringBuilder _logs;
 
@@ -43,8 +43,11 @@ namespace GeekBurger.LabelLoader.Services
                                     _Configuration.GetSection("Vision").GetValue<string>("endpoint"),
                                     _Configuration.GetSection("Vision").GetValue<string>("subscriptionKey"));
 
-            
 
+            _client.DeserializationSettings.Culture = CultureInfo.CurrentCulture;
+            _client.SerializationSettings.Culture = CultureInfo.CurrentCulture;
+
+            Console.WriteLine("");
         }
 
         public async Task<LabelImageAdded> ObterIngredientes(string pathFile)
@@ -74,7 +77,7 @@ namespace GeekBurger.LabelLoader.Services
                     {
                         foreach (Line line in lines)
                         {
-                            if (line.Text.IndexOf("INGREDIENTE") >= 0 || entrar)
+                            if (line.Text.IndexOf("INGREDIENTE",StringComparison.CurrentCultureIgnoreCase) >= 0 || entrar)
                             {
                                 entrar = true;
                                 concat.Append(line.Text);
@@ -83,7 +86,7 @@ namespace GeekBurger.LabelLoader.Services
 
                         if (concat.ToString().Length > 0)
                         {
-                            var resultado = Regex.Replace(concat.ToString(), "[^A-Za-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ, -]", "");
+                            var resultado = concat.ToString();//Regex.Replace(concat.ToString(), "[^A-Za-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ, -]", "");
                             resultado = resultado.Replace("INGREDIENTES", "");
                             resultado = resultado.Replace("INGREDIENTE", "");
 

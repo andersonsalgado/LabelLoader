@@ -5,6 +5,7 @@ using Microsoft.Azure.ServiceBus.Management;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -47,7 +48,7 @@ namespace GeekBurger.LabelLoader.Services
             return Task.CompletedTask;
         }
 
-        private async void DoWork(object state)
+        private void DoWork(object state)
         {
             DirectoryInfo _dirNotRead = new DirectoryInfo($"{Environment.CurrentDirectory}{Configuration.GetSection("Files")["NotRead"]}");
             FileInfo[] _filesNotRead = _dirNotRead.GetFiles();
@@ -57,7 +58,9 @@ namespace GeekBurger.LabelLoader.Services
                 VisionServices _vision = new VisionServices(Configuration, _loggerFactory.CreateLogger<VisionServices>(), _labelContext);
                 foreach (var file in _filesNotRead)
                 {
-                    var imagemString = await _vision.ObterIngredientes(file.FullName);
+                    var imagemString = _vision.ObterIngredientes(file.FullName).Result;
+                    MainAsync(imagemString).GetAwaiter().GetResult();
+                    _logger.LogInformation("LabelImage: {imagemString}", imagemString);
                     //MainAsync(imagemString).GetAwaiter().GetResult();
                     //_logger.LogInformation("LabelImage: {imagemString}", imagemString);
                 }
@@ -78,6 +81,7 @@ namespace GeekBurger.LabelLoader.Services
         {
             try
             {
+                managementClient = new ManagementClient(Configuration.GetSection("AzureServiceBusConfig")["connectionString"]);
                 await managementClient.GetTopicAsync(TopicName);
             }
             catch (MessagingEntityNotFoundException)
@@ -86,29 +90,19 @@ namespace GeekBurger.LabelLoader.Services
             }
             topicClient = new TopicClient(Configuration.GetSection("AzureServiceBusConfig")["connectionString"], TopicName);
 
-            Console.WriteLine("=======================================================");
-            Console.WriteLine("Press ENTER key to exit after sending all the messages.");
-            Console.WriteLine("=======================================================");
-
             await SendMessagesAsync(imagemString);
-
-            Console.ReadKey();
-
             await topicClient.CloseAsync();
+
+            Directory.Move($"{Environment.CurrentDirectory}{Configuration.GetSection("Files")["NotRead"]}", $"{Environment.CurrentDirectory}{Configuration.GetSection("Files")["Read"]}");
         }
         private async Task SendMessagesAsync(LabelImageAdded imagemString)
         {
             try
             {
                 {
-                    BinaryFormatter bf = new BinaryFormatter();
-                    using (MemoryStream ms = new MemoryStream())
-                    {
-                        bf.Serialize(ms, imagemString);
-                        var message = new Message(ms.ToArray());
+                        var message = new Message(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(imagemString)));
 
                         await topicClient.SendAsync(message);
-                    }
                 }
             }
             catch (Exception exception)

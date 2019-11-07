@@ -7,9 +7,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeekBurger.LabelLoader", "G
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeekBurger.LabelLoader.Contract", "..\GeekBurger.LabelLoader.Contract\GeekBurger.LabelLoader.Contract.csproj", "{EC604AEA-93A7-4806-9B2B-968D33F8E348}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeekBurger.LabelLoader.Migrations", "..\GeekBurger.LabelLoader.Migrations\GeekBurger.LabelLoader.Migrations.csproj", "{7E1E04B9-3965-4C5A-9BC1-338F1B2842C0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeekBurger.LabelLoader.Migrations", "..\GeekBurger.LabelLoader.Migrations\GeekBurger.LabelLoader.Migrations.csproj", "{7E1E04B9-3965-4C5A-9BC1-338F1B2842C0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeekBurger.LabelLoader.Models", "..\GeekBurger.LabelLoader.Models\GeekBurger.LabelLoader.Models.csproj", "{8D585E2E-0C7B-422B-B0AA-481D42A76AB5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeekBurger.LabelLoader.Models", "..\GeekBurger.LabelLoader.Models\GeekBurger.LabelLoader.Models.csproj", "{8D585E2E-0C7B-422B-B0AA-481D42A76AB5}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LogMonitor", "C:\Users\logonrmlocal\Downloads\GeekBurger-Products-master\GeekBurger-Products-master\LogMonitor\LogMonitor.csproj", "{B0266273-F7C3-4279-A679-AD38D2CD4001}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{8D585E2E-0C7B-422B-B0AA-481D42A76AB5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8D585E2E-0C7B-422B-B0AA-481D42A76AB5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8D585E2E-0C7B-422B-B0AA-481D42A76AB5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B0266273-F7C3-4279-A679-AD38D2CD4001}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B0266273-F7C3-4279-A679-AD38D2CD4001}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B0266273-F7C3-4279-A679-AD38D2CD4001}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B0266273-F7C3-4279-A679-AD38D2CD4001}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

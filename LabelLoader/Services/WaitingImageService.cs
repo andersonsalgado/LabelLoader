@@ -1,5 +1,6 @@
 ﻿using GeekBurger.LabelLoader.Contract;
 using GeekBurger.LabelLoader.Migrations;
+using GeekBurger.LabelLoader.Models;
 using Microsoft.Azure.ServiceBus;
 using Microsoft.Azure.ServiceBus.Management;
 using Microsoft.Extensions.Configuration;
@@ -27,11 +28,15 @@ namespace GeekBurger.LabelLoader.Services
         private Timer _timer;
         private ITopicClient topicClient;
         private ManagementClient managementClient;
+        private readonly StringBuilder _logs;
+
         public WaitingImageService(
-                ILogger<WaitingImageService> logger, 
+                ILogger<WaitingImageService> logger,
                 IConfiguration configuration,
                 ILoggerFactory loggerFactory)
         {
+            _logs = new StringBuilder();
+
             _logger = logger;
             Configuration = configuration;
             _labelContext = new LabelContext(configuration);
@@ -41,7 +46,7 @@ namespace GeekBurger.LabelLoader.Services
 
         public Task StartAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("Serviço Iniciado.");
+            _logs.AppendLine("Serviço Iniciado.");
 
             _timer = new Timer(DoWork, null, TimeSpan.Zero,
                 TimeSpan.FromSeconds(10000));
@@ -61,15 +66,15 @@ namespace GeekBurger.LabelLoader.Services
                 {
                     var imagemString = _vision.ObterIngredientes(file.FullName).Result;
                     MainAsync(imagemString).GetAwaiter().GetResult();
-                    _logger.LogInformation("LabelImage: {imagemString}", imagemString);
+                    _logs.AppendLine("LabelImage: "+ imagemString);
                 }
             }
-            
+
         }
 
         public Task StopAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("Serviço Finalizado.");
+            _logs.AppendLine("Serviço Finalizado.");
 
             _timer?.Change(Timeout.Infinite, 0);
 
@@ -92,21 +97,42 @@ namespace GeekBurger.LabelLoader.Services
             await SendMessagesAsync(imagemString);
             await topicClient.CloseAsync();
 
-            //Directory.Move($"{Environment.CurrentDirectory}{Configuration.GetSection("Files")["NotRead"]}", $"{Environment.CurrentDirectory}{Configuration.GetSection("Files")["Read"]}");
+            var notRead = $"{Environment.CurrentDirectory}{Configuration.GetSection("Files")["NotRead"]}";
+            var read = $"{Environment.CurrentDirectory}{Configuration.GetSection("Files")["Read"]}";
+
+            if (!Directory.Exists(notRead))
+                Directory.CreateDirectory(notRead);
+
+            if (!Directory.Exists(read))
+                Directory.CreateDirectory(read);
+
+            Directory.Move(notRead, read);
         }
         private async Task SendMessagesAsync(LabelImageAdded imagemString)
         {
             try
             {
                 {
-                        var message = new Message(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(imagemString)));
+                    var message = new Message(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(imagemString)));
 
-                        await topicClient.SendAsync(message);
+                    await topicClient.SendAsync(message);
                 }
             }
             catch (Exception exception)
             {
-                Console.WriteLine($"{DateTime.Now} :: Exception: {exception.Message}");
+                _logs.AppendLine($"{DateTime.Now} :: Exception: {exception.Message}");
+
+            }
+            finally
+            {
+                _logger.LogInformation(_logs.ToString());
+
+                Log _log = new Log();
+                _log.DataHora = DateTime.Now;
+                _log.Mensagem = _logs.ToString();
+
+                LogService _logService = new LogService();
+                await _logService.MainAsync(_log);
             }
         }
 

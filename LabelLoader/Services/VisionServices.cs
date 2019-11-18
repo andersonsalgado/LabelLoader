@@ -1,5 +1,6 @@
 ﻿using GeekBurger.LabelLoader.Contract;
 using GeekBurger.LabelLoader.Migrations;
+using GeekBurger.LabelLoader.Models;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using Microsoft.Extensions.Configuration;
@@ -111,15 +112,20 @@ namespace GeekBurger.LabelLoader.Services
                 _logs.AppendLine($"Ocorreu um erro: {ex.Message}");
                 _logger.LogError(ex,_logs.ToString());
             }
+            finally
+            {
+                _logger.LogInformation(_logs.ToString());
 
-            _logger.LogInformation(_logs.ToString());
+                Log _log = new Log();
+                _log.DataHora = DateTime.Now;
+                _log.Mensagem = _logs.ToString();
+
+                LogService _logService = new LogService();
+                await _logService.MainAsync(_log);
+            }
             return null;
         }
 
-        /*
-        * AUTHENTICATE
-        * Creates a Computer Vision client used by each example.
-        */
         public static ComputerVisionClient Authenticate(string endpoint, string key)
         {
             ComputerVisionClient client = 

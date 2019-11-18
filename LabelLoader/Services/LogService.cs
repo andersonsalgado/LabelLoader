@@ -16,7 +16,7 @@ namespace GeekBurger.LabelLoader.Services
     {
         public IConfiguration Configuration { get; }
 
-        const string TopicName = "MUDAR-AQUI-PARA-O-TOPIC-CORRETO";
+        const string TopicName = "log";
         private ITopicClient topicClient;
         private ManagementClient managementClient;
 
